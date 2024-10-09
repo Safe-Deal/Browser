@@ -1,0 +1,33 @@
+{
+  "name": "safe-deal-browser",
+  "version": "1.0.0",
+  "description": "Safe Deal - Browser is a secure, privacy-focused browser based on Chromium that includes the Safe Deal Shopping Assistant extension by default. This browser enhances users' online shopping experience with features like price tracking, fake review detection, and seller analysis.",
+  "scripts": {
+    "setup": "./tools/setup.sh",
+    "update": "./tools/update_source.sh",
+    "build": "./tools/build.sh",
+    "start": "./out/Default/Chromium.app/Contents/MacOS/Chromium"
+  },
+  "keywords": [
+    "browser",
+    "chromium",
+    "safe-deal",
+    "shopping-assistant",
+    "privacy"
+  ],
+  "author": "Safe Deal Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/safe-deal/safe-deal-browser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/safe-deal/safe-deal-browser/issues"
+  },
+  "homepage": "https://github.com/safe-deal/safe-deal-browser#readme",
+  "dependencies": {
+    "concurrently": "^9.0.1",
+    "install": "^0.13.0",
+    "shelljs": "^0.8.5"
+  }
+}
