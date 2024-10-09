@@ -27,8 +27,10 @@
   },
   "homepage": "https://github.com/safe-deal/safe-deal-browser#readme",
   "dependencies": {
+    "cli-progress": "^3.12.0",
     "concurrently": "^9.0.1",
     "install": "^0.13.0",
+    "ora": "^8.1.0",
     "shelljs": "^0.8.5"
   }
 }

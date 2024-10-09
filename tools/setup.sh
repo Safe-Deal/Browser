@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
 
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    echo "Node.js is not installed. Please install Node.js and npm first."
+    exit 1
+fi
+
+# Check if Yarn is installed
+if ! command -v yarn &> /dev/null; then
+    echo "Yarn is not installed. Please install Yarn first."
+    exit 1
+fi
+
+# Install dependencies if they're not already installed
+if [ ! -d "node_modules" ]; then
+    echo "Installing dependencies..."
+    yarn install
+fi
+
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
@@ -128,24 +146,65 @@ fi
 log "Syncing Chromium dependencies..."
 echo -e "${CYAN}This process may take a while. Please be patient.${NC}"
 
-# Function to show a simple spinner
-show_spinner() {
+# Function to show progress
+show_progress() {
     local pid=$1
-    local delay=0.1
-    local spinstr='|/-\'
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
-        local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-        printf "\b\b\b\b\b\b"
-    done
-    printf "    \b\b\b\b"
+    local message=$2
+    local timeout=3600  # 1 hour timeout
+
+    node -e "
+        const cliProgress = require('cli-progress');
+        const fs = require('fs');
+        const bar = new cliProgress.SingleBar({
+            format: '${message} |{bar}| {percentage}% || {value}/{total} Chunks || Elapsed: {duration_formatted}',
+            barCompleteChar: '\u2588',
+            barIncompleteChar: '\u2591',
+            hideCursor: true
+        });
+        
+        bar.start(100, 0);
+        
+        let progress = 0;
+        let lastUpdateTime = Date.now();
+        const startTime = Date.now();
+        const logFile = 'sync_progress.log';
+
+        const intervalId = setInterval(() => {
+            if (!process.kill(${pid}, 0)) {
+                clearInterval(intervalId);
+                bar.update(100);
+                bar.stop();
+                console.log('${message} completed');
+                process.exit();
+            }
+
+            const currentTime = Date.now();
+            if (currentTime - startTime > ${timeout} * 1000) {
+                clearInterval(intervalId);
+                bar.stop();
+                console.log('${message} timed out after ${timeout} seconds');
+                process.exit(1);
+            }
+
+            if (currentTime - lastUpdateTime > 10000) {  // Log every 10 seconds
+                fs.appendFileSync(logFile, \`\${new Date().toISOString()}: Progress at \${progress}%\n\`);
+                lastUpdateTime = currentTime;
+            }
+
+            progress = Math.min(progress + 0.1, 99);
+            bar.update(progress);
+        }, 1000);
+    " &
+    wait $pid
+    if [ $? -ne 0 ]; then
+        error "The ${message} process failed or timed out. Check sync_progress.log for details."
+    fi
 }
 
-# Run gclient sync in the background and show a spinner
+# Usage example:
+log "Syncing Chromium dependencies..."
 gclient sync &
-show_spinner $!
+show_progress $! "Syncing Chromium dependencies"
 
 # Check if gclient sync was successful
 if [ $? -eq 0 ]; then

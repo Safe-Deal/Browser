@@ -103,7 +103,7 @@ We welcome contributions to the Safe Deal - Browser project. Please read our con
 
 ## License
 
-This project is licensed under the [Insert appropriate license here] - see the LICENSE file for details.
+This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
 
 ## Acknowledgments
 
