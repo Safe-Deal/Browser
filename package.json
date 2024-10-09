@@ -6,7 +6,8 @@
     "setup": "./tools/setup.sh",
     "update": "./tools/update_source.sh",
     "build": "./tools/build.sh",
-    "start": "./out/Default/Chromium.app/Contents/MacOS/Chromium"
+    "start": "./out/Default/Chromium.app/Contents/MacOS/Chromium",
+    "postinstall": "yarn setup"
   },
   "keywords": [
     "browser",
