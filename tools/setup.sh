@@ -1,4 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+# Treat unset variables as an error when substituting.
+set -u
+
+# Print commands and their arguments as they are executed.
+set -x
 
 # Ensure script is executed from the tools directory
 cd "$(dirname "$0")"
@@ -117,8 +126,33 @@ fi
 
 # Sync dependencies
 log "Syncing Chromium dependencies..."
-echo -e "${CYAN}Almost there! This is the final step.${NC}"
-gclient sync || error "Failed to sync Chromium dependencies"
+echo -e "${CYAN}This process may take a while. Please be patient.${NC}"
+
+# Function to show a simple spinner
+show_spinner() {
+    local pid=$1
+    local delay=0.1
+    local spinstr='|/-\'
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spinstr#?}
+        printf " [%c]  " "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf "\b\b\b\b\b\b"
+    done
+    printf "    \b\b\b\b"
+}
+
+# Run gclient sync in the background and show a spinner
+gclient sync &
+show_spinner $!
+
+# Check if gclient sync was successful
+if [ $? -eq 0 ]; then
+    success "Chromium dependencies synced successfully."
+else
+    error "Failed to sync Chromium dependencies"
+fi
 
 # Display completion message
 echo -e "${MAGENTA}"
