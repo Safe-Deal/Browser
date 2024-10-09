@@ -1,0 +1,103 @@
+# Chromium build output
+out/
+Debug/
+Release/
+*.pyc
+*.pyo
+*.exe
+*.dll
+*.so
+*.dylib
+*.aps
+*.pdb
+*.ilk
+*.lib
+*.exp
+*.obj
+*.idb
+*.manifest
+
+# Chromium specific
+.gclient
+.gclient_entries
+.cipd
+.cipd_impl
+.gclient_previous
+.gclient_previous_entries
+.gclient_previous_impl
+.gclient_previous_cipd
+.gclient_previous_cipd_impl
+
+# Depot Tools
+.depot_tools
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+ENV/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Safe Deal specific
+src/chrome/browser/resources/safe_deal_extension/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Build system files
+compile_commands.json
+.ninja_deps
+.ninja_log
+
+# Crash reports
+*.dmp
+*.breakpad
+
+# Test results
+test-results/
+
+# Documentation
+docs/_build/
+
+# Dependency directories
+third_party/
+
+# Custom ignore files
+.gitignore_local
