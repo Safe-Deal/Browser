@@ -12,7 +12,6 @@ cd "$PROJECT_ROOT"
 # Verify we're in the correct directory
 if [ ! -f "package.json" ]; then
     echo "Error: Could not find package.json. Make sure you're running this script from the correct directory." >&2
-    echo "Current directory: $(pwd)" >&2
     exit 1
 fi
 
@@ -21,9 +20,7 @@ CHROMIUM_SRC_DIR="$PROJECT_ROOT/src"
 
 # Verify the Chromium src directory exists
 if [ ! -d "$CHROMIUM_SRC_DIR" ] || [ ! -f "$CHROMIUM_SRC_DIR/BUILD.gn" ]; then
-    echo "Error: Could not find Chromium source directory at $CHROMIUM_SRC_DIR" >&2
-    echo "Current directory structure:" >&2
-    ls -R "$PROJECT_ROOT" >&2
+    echo "Error: Could not find Chromium source directory at $CHROMIUM_SRC_DIR"
     exit 1
 fi
 

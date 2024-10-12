@@ -1,0 +1,14 @@
+{
+  "format_version": "1.1",
+  "package_name": "skia/tools/goldctl/mac-arm64",
+  "install_mode": "copy",
+  "actual_install_mode": "copy",
+  "files": [
+    {
+      "name": "goldctl",
+      "size": 47446386,
+      "executable": true,
+      "hash": "pafnxVY7wYHprg3k7FwjO_QgVzMCANi9obviZWfa6JgC"
+    }
+  ]
+}

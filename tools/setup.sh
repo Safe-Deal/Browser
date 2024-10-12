@@ -124,6 +124,16 @@ if [ -d "../src" ]; then
     else
         log "Skipping Chromium source code update."
     fi
+
+    read -p "Do you want to remove the Chromium git repository? (y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log "Removing Chromium git repository..."
+        ./clean_chromium.sh || error "Failed to remove Chromium git repository"
+        success "Chromium git repository removed successfully."
+    else
+        log "Keeping Chromium git repository."
+    fi
 else
     log "Fetching Chromium source code..."
     echo -e "${CYAN}This process may take a while. Feel free to grab a coffee!${NC}"
@@ -131,6 +141,10 @@ else
     fetch --nohooks chromium || error "Failed to fetch Chromium source code"
     cd - > /dev/null
     success "Chromium source code fetched successfully."
+
+    log "Removing Chromium git repository..."
+    ./clean_chromium.sh || error "Failed to remove Chromium git repository"
+    success "Chromium git repository removed successfully."
 fi
 
 # Sync dependencies
