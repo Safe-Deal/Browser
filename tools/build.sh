@@ -20,9 +20,9 @@ fi
 
 # Try to find the Chromium src directory
 CHROMIUM_SRC_DIR=""
-for dir in "$PROJECT_ROOT" "$PROJECT_ROOT/.." "$PROJECT_ROOT/../.."; do
-    if [ -d "$dir/src" ] && [ -f "$dir/src/BUILD.gn" ]; then
-        CHROMIUM_SRC_DIR="$dir/src"
+for dir in "$PROJECT_ROOT/src" "$PROJECT_ROOT/chromium/src" "$PROJECT_ROOT/../src" "$PROJECT_ROOT/../chromium/src"; do
+    if [ -d "$dir" ] && [ -f "$dir/BUILD.gn" ]; then
+        CHROMIUM_SRC_DIR="$dir"
         break
     fi
 done
