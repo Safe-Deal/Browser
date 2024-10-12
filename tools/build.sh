@@ -2,49 +2,53 @@
 
 set -e
 
-# Ensure we're in the correct directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$SCRIPT_DIR/.."
-
-# Change to the project root directory
-cd "$PROJECT_ROOT"
-
-# Verify we're in the correct directory
-if [ ! -f "package.json" ]; then
-    echo "Error: Could not find package.json. Make sure you're running this script from the correct directory." >&2
-    exit 1
-fi
-
-# Set the Chromium src directory
 CHROMIUM_SRC_DIR="$PROJECT_ROOT/src"
+
+echo "Setting up build environment..."
 
 # Verify the Chromium src directory exists
 if [ ! -d "$CHROMIUM_SRC_DIR" ] || [ ! -f "$CHROMIUM_SRC_DIR/BUILD.gn" ]; then
     echo "Error: Could not find Chromium source directory at $CHROMIUM_SRC_DIR"
+    echo "Please ensure you have cloned the Chromium source code correctly."
+    echo "Run the following commands to set up Chromium:"
+    echo "  cd $PROJECT_ROOT"
+    echo "  fetch chromium"
+    echo "  cd src"
+    echo "  gclient sync"
     exit 1
 fi
 
-# Change to the Chromium src directory
+# Ensure we're in the Chromium src directory
 cd "$CHROMIUM_SRC_DIR"
 
-echo "Using Chromium source directory: $CHROMIUM_SRC_DIR" >&2
+# Verify we're in a valid Chromium checkout
+if [ ! -f ".gclient" ]; then
+    echo "Error: Not in a valid Chromium checkout."
+    echo "Please run the following commands to set up Chromium:"
+    echo "  cd $CHROMIUM_SRC_DIR"
+    echo "  gclient config https://chromium.googlesource.com/chromium/src.git"
+    echo "  gclient sync"
+    exit 1
+fi
+
+echo "Using Chromium source directory: $CHROMIUM_SRC_DIR"
 
 # Check if the 'out' directory exists, if not create it
 if [ ! -d "out/Default" ]; then
   mkdir -p out/Default
 fi
 
-# Configure the build
-echo "Configuring the build..." >&2
+echo "Configuring the build..."
 gn gen out/Default
 
-# Run the actual build command
-echo "Building Chromium..." >&2
-autoninja -C out/Default chrome 2>&1 | grep -i "error:" >&2
+echo "Building Chromium..."
+autoninja -C out/Default chrome
 
-if [ ${PIPESTATUS[0]} -eq 0 ]; then
-    echo "Build completed successfully!" >&2
+if [ $? -eq 0 ]; then
+    echo "Build completed successfully!"
 else
-    echo "Build failed. See errors above." >&2
+    echo "Build failed. See errors above."
     exit 1
 fi
