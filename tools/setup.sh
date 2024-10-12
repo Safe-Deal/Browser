@@ -122,23 +122,14 @@ if [ -d "../src" ]; then
         cd - > /dev/null
         success "Chromium source code updated successfully."
     else
-        read -p "Do you want to force a fresh fetch? This will delete the existing source code. (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log "Removing existing Chromium source code..."
-            rm -rf ../src
-            log "Fetching Chromium source code..."
-            echo -e "${CYAN}This process may take a while. Feel free to grab a coffee!${NC}"
-            fetch --nohooks chromium || error "Failed to fetch Chromium source code"
-            success "Chromium source code fetched successfully."
-        else
-            log "Skipping Chromium source code fetch/update."
-        fi
+        log "Skipping Chromium source code update."
     fi
 else
     log "Fetching Chromium source code..."
     echo -e "${CYAN}This process may take a while. Feel free to grab a coffee!${NC}"
+    cd ..
     fetch --nohooks chromium || error "Failed to fetch Chromium source code"
+    cd - > /dev/null
     success "Chromium source code fetched successfully."
 fi
 
@@ -146,60 +137,8 @@ fi
 log "Syncing Chromium dependencies..."
 echo -e "${CYAN}This process may take a while. Please be patient.${NC}"
 
-# Function to show progress
-show_progress() {
-    local pid=$1
-    local message=$2
-    local timeout=3600  # 1 hour timeout
-
-    node -e "
-        const cliProgress = require('cli-progress');
-        const fs = require('fs');
-        const bar = new cliProgress.SingleBar({
-            format: '${message} |{bar}| {percentage}% || {value}/{total} Chunks || Elapsed: {duration_formatted}',
-            barCompleteChar: '\u2588',
-            barIncompleteChar: '\u2591',
-            hideCursor: true
-        });
-        
-        bar.start(100, 0);
-        
-        let progress = 0;
-        let lastUpdateTime = Date.now();
-        const startTime = Date.now();
-        const logFile = 'sync_progress.log';
-
-        const intervalId = setInterval(() => {
-            if (!process.kill(${pid}, 0)) {
-                clearInterval(intervalId);
-                bar.update(100);
-                bar.stop();
-                console.log('${message} completed');
-                process.exit();
-            }
-
-            const currentTime = Date.now();
-            if (currentTime - startTime > ${timeout} * 1000) {
-                clearInterval(intervalId);
-                bar.stop();
-                console.log('${message} timed out after ${timeout} seconds');
-                process.exit(1);
-            }
-
-            if (currentTime - lastUpdateTime > 10000) {  // Log every 10 seconds
-                fs.appendFileSync(logFile, \`\${new Date().toISOString()}: Progress at \${progress}%\n\`);
-                lastUpdateTime = currentTime;
-            }
-
-            progress = Math.min(progress + 0.1, 99);
-            bar.update(progress);
-        }, 1000);
-    " &
-    wait $pid
-    if [ $? -ne 0 ]; then
-        error "The ${message} process failed or timed out. Check sync_progress.log for details."
-    fi
-}
+# Change to the src directory before running gclient sync
+cd ../src
 
 # Usage example:
 log "Syncing Chromium dependencies..."
@@ -212,6 +151,9 @@ if [ $? -eq 0 ]; then
 else
     error "Failed to sync Chromium dependencies"
 fi
+
+# Change back to the tools directory
+cd - > /dev/null
 
 # Display completion message
 echo -e "${MAGENTA}"

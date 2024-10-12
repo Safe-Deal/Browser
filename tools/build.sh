@@ -2,8 +2,6 @@
 
 set -e
 
-echo "Building Chromium (this may take a while)..."
-
 # Ensure we're in the correct directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$SCRIPT_DIR/.."
@@ -13,31 +11,26 @@ cd "$PROJECT_ROOT"
 
 # Verify we're in the correct directory
 if [ ! -f "package.json" ]; then
-    echo "Error: Could not find package.json. Make sure you're running this script from the correct directory."
-    echo "Current directory: $(pwd)"
+    echo "Error: Could not find package.json. Make sure you're running this script from the correct directory." >&2
+    echo "Current directory: $(pwd)" >&2
     exit 1
 fi
 
-# Try to find the Chromium src directory
-CHROMIUM_SRC_DIR=""
-for dir in "$PROJECT_ROOT/src" "$PROJECT_ROOT/chromium/src" "$PROJECT_ROOT/../src" "$PROJECT_ROOT/../chromium/src"; do
-    if [ -d "$dir" ] && [ -f "$dir/BUILD.gn" ]; then
-        CHROMIUM_SRC_DIR="$dir"
-        break
-    fi
-done
+# Set the Chromium src directory
+CHROMIUM_SRC_DIR="$PROJECT_ROOT/src"
 
-if [ -z "$CHROMIUM_SRC_DIR" ]; then
-    echo "Error: Could not find Chromium source directory."
-    echo "Current directory structure:"
-    ls -R "$PROJECT_ROOT"
+# Verify the Chromium src directory exists
+if [ ! -d "$CHROMIUM_SRC_DIR" ] || [ ! -f "$CHROMIUM_SRC_DIR/BUILD.gn" ]; then
+    echo "Error: Could not find Chromium source directory at $CHROMIUM_SRC_DIR" >&2
+    echo "Current directory structure:" >&2
+    ls -R "$PROJECT_ROOT" >&2
     exit 1
 fi
 
 # Change to the Chromium src directory
 cd "$CHROMIUM_SRC_DIR"
 
-echo "Using Chromium source directory: $CHROMIUM_SRC_DIR"
+echo "Using Chromium source directory: $CHROMIUM_SRC_DIR" >&2
 
 # Check if the 'out' directory exists, if not create it
 if [ ! -d "out/Default" ]; then
@@ -45,11 +38,16 @@ if [ ! -d "out/Default" ]; then
 fi
 
 # Configure the build
-echo "Configuring the build..."
+echo "Configuring the build..." >&2
 gn gen out/Default
 
 # Run the actual build command
-echo "Building Chromium..."
-autoninja -C out/Default chrome
+echo "Building Chromium..." >&2
+autoninja -C out/Default chrome 2>&1 | grep -i "error:" >&2
 
-echo "Build completed successfully!"
+if [ ${PIPESTATUS[0]} -eq 0 ]; then
+    echo "Build completed successfully!" >&2
+else
+    echo "Build failed. See errors above." >&2
+    exit 1
+fi
