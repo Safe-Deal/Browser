@@ -1,3 +1,8 @@
 [submodule "chromium/src"]
-    path = chromium/src
-    url = https://chromium.googlesource.com/chromium/src.git
+	path = chromium/src
+	url = https://github.com/chromium/chromium.git
+[submodule "tools/chromium/src"]
+	path = tools/chromium/src
+	url = https://chromium.googlesource.com/chromium/src.git
+
+

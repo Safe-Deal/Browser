@@ -22,11 +22,11 @@ Safe Deal - Browser is a secure, privacy-focused browser based on Chromium that 
 
 ### Prerequisites
 
-- macOS
-- Xcode
-- Homebrew
-- Python3
-- git
+- macOS or Linux
+- Git
+- Python 3
+- Node.js and npm
+- Yarn
 
 ### Setting up the Development Environment
 
@@ -46,7 +46,7 @@ Safe Deal - Browser is a secure, privacy-focused browser based on Chromium that 
    This script will:
 
    - Install necessary dependencies
-   - Clone the Chromium repository as a submodule
+   - Clone the open-source Chromium repository as a submodule
    - Set up the development environment
 
 3. Build Chromium:
@@ -72,7 +72,7 @@ Safe Deal - Browser is a secure, privacy-focused browser based on Chromium that 
 
 7. Run the modified browser:
    ```bash
-   ./chromium/src/out/Default/Chromium.app/Contents/MacOS/Chromium
+   ./chromium/src/out/Default/chrome
    ```
 
 ## Contributing

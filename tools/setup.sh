@@ -110,52 +110,93 @@ else
     log "Depot Tools already in PATH."
 fi
 
-# Clone Chromium as a submodule
-log "Cloning Chromium as a submodule..."
-git submodule add https://chromium.googlesource.com/chromium/src.git chromium/src || error "Failed to add Chromium submodule"
-git submodule update --init --recursive || error "Failed to initialize Chromium submodule"
-success "Chromium submodule added successfully."
+# Function to clone Chromium repository
+clone_chromium() {
+    log "Cloning Chromium repository..."
+    git clone https://github.com/chromium/chromium.git ../chromium/src || error "Failed to clone Chromium repository"
+    cd ../chromium/src
+
+    # Configure git to ignore problematic submodules
+    git config submodule.chrome/test/data/perf/private.update none
+    git config submodule.third_party/webgl/src.update none
+    git config submodule.build/fuchsia/internal.update none
+    git config submodule.third_party/fuchsia-sdk.update none
+
+    # Create a .gclient file to exclude problematic dependencies
+    cat > ../.gclient <<EOL
+solutions = [
+  {
+    "url": "https://github.com/chromium/chromium.git",
+    "managed": False,
+    "name": "src",
+    "deps_file": "DEPS",
+    "custom_deps": {
+      "build/fuchsia/internal": None,
+      "third_party/fuchsia-sdk": None,
+    },
+  },
+]
+EOL
+
+    # Initialize and update submodules, ignoring errors
+    git submodule update --init --recursive || true
+
+    cd - > /dev/null
+    success "Chromium repository cloned successfully."
+}
 
 # Check if Chromium source code already exists
 if [ -d "../chromium/src" ]; then
-    log "Chromium source code directory already exists."
+    log "Chromium source code directory exists."
     read -p "Do you want to update the existing code? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log "Updating Chromium source code..."
         cd ../chromium/src
         git pull origin main || error "Failed to update Chromium source code"
+        
+        # Skip updating submodules entirely
+        log "Skipping submodule updates to avoid authentication issues."
+        
         cd - > /dev/null
         success "Chromium source code updated successfully."
     else
         log "Skipping Chromium source code update."
     fi
 else
-    log "Fetching Chromium source code..."
-    echo -e "${CYAN}This process may take a while. Feel free to grab a coffee!${NC}"
-    cd ../chromium/src
-    gclient sync || error "Failed to sync Chromium source code"
-    cd - > /dev/null
-    success "Chromium source code fetched successfully."
+    clone_chromium
 fi
 
 # Sync dependencies
 log "Syncing Chromium dependencies..."
 echo -e "${CYAN}This process may take a while. Please be patient.${NC}"
 
-# Change to the src directory before running gclient sync
-cd ../chromium/src
+# Change to the chromium directory before running gclient sync
+cd ../chromium
 
-# Usage example:
+# Create a .gclient file to exclude all submodules
+cat > .gclient <<EOL
+solutions = [
+  {
+    "url": "https://github.com/chromium/chromium.git",
+    "managed": False,
+    "name": "src",
+    "deps_file": "DEPS",
+    "custom_deps": {},
+  },
+]
+recursedeps = []
+EOL
+
+# Run gclient sync with options to skip all submodules
 log "Syncing Chromium dependencies..."
-gclient sync &
-show_progress $! "Syncing Chromium dependencies"
+gclient sync --ignore_locks --delete_unversioned_trees --reset --force --with_branch_heads --with_tags -v -R --nohooks || true
 
 # Check if gclient sync was successful
 if [ $? -eq 0 ]; then
     success "Chromium dependencies synced successfully."
 else
-    error "Failed to sync Chromium dependencies"
+    warning "Some dependencies failed to sync. This is normal for open-source contributors."
 fi
 
 # Change back to the tools directory

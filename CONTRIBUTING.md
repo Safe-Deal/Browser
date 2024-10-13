@@ -79,8 +79,8 @@ When making changes that affect the Chromium codebase:
 1. Ensure you're working in the `chromium/src` directory.
 2. Make your changes in a separate branch.
 3. Test your changes thoroughly.
-4. Submit a patch to the Chromium project following their contribution guidelines.
-5. Once your patch is accepted, update the Chromium submodule in the Safe Deal - Browser repository.
+4. Submit a pull request to the Chromium project on GitHub following their contribution guidelines.
+5. Once your pull request is accepted and merged, update the Chromium submodule in the Safe Deal - Browser repository.
 
 ## License
 
