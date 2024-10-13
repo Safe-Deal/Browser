@@ -72,6 +72,16 @@ This project and everyone participating in it is governed by our Code of Conduct
 3. Provide examples to demonstrate the steps or the end result.
 4. Explain why this enhancement would be useful to most Safe Deal - Browser users.
 
+## Working with Chromium Submodule
+
+When making changes that affect the Chromium codebase:
+
+1. Ensure you're working in the `chromium/src` directory.
+2. Make your changes in a separate branch.
+3. Test your changes thoroughly.
+4. Submit a patch to the Chromium project following their contribution guidelines.
+5. Once your patch is accepted, update the Chromium submodule in the Safe Deal - Browser repository.
+
 ## License
 
 By contributing to Safe Deal - Browser, you agree that your contributions will be licensed under its Apache License 2.0. This is the same license that covers the project and ensures that all contributions have the same open-source protections. For more details, see the [LICENSE](LICENSE) file.

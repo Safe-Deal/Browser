@@ -4,7 +4,7 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$SCRIPT_DIR/.."
-CHROMIUM_SRC_DIR="$PROJECT_ROOT/src"
+CHROMIUM_SRC_DIR="$PROJECT_ROOT/chromium/src"
 
 echo "Setting up build environment..."
 

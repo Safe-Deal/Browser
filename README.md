@@ -30,71 +30,49 @@ Safe Deal - Browser is a secure, privacy-focused browser based on Chromium that 
 
 ### Setting up the Development Environment
 
-1. Install Depot Tools:
+1. Clone the Safe Deal - Browser repository:
 
    ```bash
-   git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+   git clone https://github.com/your-username/safe-deal-browser.git
+   cd safe-deal-browser
    ```
 
-   Add Depot Tools to your PATH in `~/.bash_profile` or `~/.zshrc`:
+2. Run the setup script:
 
    ```bash
-   export PATH="$PATH:/path/to/depot_tools"
+   ./tools/setup.sh
    ```
 
-2. Clone the Chromium repository:
+   This script will:
+
+   - Install necessary dependencies
+   - Clone the Chromium repository as a submodule
+   - Set up the development environment
+
+3. Build Chromium:
 
    ```bash
-   mkdir chromium && cd chromium
-   fetch chromium
+   ./tools/build.sh
    ```
 
-3. Install additional build dependencies:
+4. Set up the Safe Deal Shopping Assistant Extension:
+
+   - Copy the extension files to `src/safe_deal/extension`
+
+5. Modify Chromium to include the extension:
+
+   - Update `chromium/src/chrome/browser/extensions/external_component_loader.cc`
+   - Create and update `chromium/src/chrome/common/safe_deal_constants.h` and `chromium/src/chrome/common/safe_deal_constants.cc`
+
+6. Rebuild Chromium:
 
    ```bash
-   cd src
-   ./build/install-build-deps.sh
+   ./tools/build.sh
    ```
 
-4. Configure the build:
-
+7. Run the modified browser:
    ```bash
-   gn args out/Default
-   ```
-
-   Add the following configuration:
-
-   ```
-   is_debug = false
-   is_component_build = false
-   symbol_level = 0
-   ```
-
-5. Build Chromium:
-
-   ```bash
-   autoninja -C out/Default chrome
-   ```
-
-6. Set up the Safe Deal Shopping Assistant Extension:
-
-   - Download the extension from the Chrome Web Store
-   - Extract the files to `src/chrome/browser/resources/safe_deal_extension`
-
-7. Modify Chromium to include the extension:
-
-   - Update `src/chrome/browser/extensions/external_component_loader.cc`
-   - Create and update `src/chrome/common/safe_deal_constants.h` and `src/chrome/common/safe_deal_constants.cc`
-
-8. Rebuild Chromium:
-
-   ```bash
-   autoninja -C out/Default chrome
-   ```
-
-9. Run the modified browser:
-   ```bash
-   out/Default/Chromium.app/Contents/MacOS/Chromium
+   ./chromium/src/out/Default/Chromium.app/Contents/MacOS/Chromium
    ```
 
 ## Contributing

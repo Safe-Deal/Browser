@@ -1,8 +1,0 @@
-import("//mojo/public/tools/bindings/mojom.gni")
-mojom("mojom") {
-  sources = [ "enterprise_companion.mojom" ]
-  visibility = [
-    "//chrome/enterprise_companion:*",
-    "//chrome/updater:*",
-  ]
-}

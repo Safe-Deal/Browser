@@ -1,6 +1,0 @@
-{
-  "short_name": "Test PWA",
-  "name": "Test PWA with manifest with id",
-  "start_url": "start_url.html",
-  "id": "some_id"
-}

@@ -110,41 +110,33 @@ else
     log "Depot Tools already in PATH."
 fi
 
+# Clone Chromium as a submodule
+log "Cloning Chromium as a submodule..."
+git submodule add https://chromium.googlesource.com/chromium/src.git chromium/src || error "Failed to add Chromium submodule"
+git submodule update --init --recursive || error "Failed to initialize Chromium submodule"
+success "Chromium submodule added successfully."
+
 # Check if Chromium source code already exists
-if [ -d "../src" ]; then
+if [ -d "../chromium/src" ]; then
     log "Chromium source code directory already exists."
     read -p "Do you want to update the existing code? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log "Updating Chromium source code..."
-        cd ../src
+        cd ../chromium/src
         git pull origin main || error "Failed to update Chromium source code"
         cd - > /dev/null
         success "Chromium source code updated successfully."
     else
         log "Skipping Chromium source code update."
     fi
-
-    read -p "Do you want to remove the Chromium git repository? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        log "Removing Chromium git repository..."
-        ./clean_chromium.sh || error "Failed to remove Chromium git repository"
-        success "Chromium git repository removed successfully."
-    else
-        log "Keeping Chromium git repository."
-    fi
 else
     log "Fetching Chromium source code..."
     echo -e "${CYAN}This process may take a while. Feel free to grab a coffee!${NC}"
-    cd ..
-    fetch --nohooks chromium || error "Failed to fetch Chromium source code"
+    cd ../chromium/src
+    gclient sync || error "Failed to sync Chromium source code"
     cd - > /dev/null
     success "Chromium source code fetched successfully."
-
-    log "Removing Chromium git repository..."
-    ./clean_chromium.sh || error "Failed to remove Chromium git repository"
-    success "Chromium git repository removed successfully."
 fi
 
 # Sync dependencies
@@ -152,7 +144,7 @@ log "Syncing Chromium dependencies..."
 echo -e "${CYAN}This process may take a while. Please be patient.${NC}"
 
 # Change to the src directory before running gclient sync
-cd ../src
+cd ../chromium/src
 
 # Usage example:
 log "Syncing Chromium dependencies..."

@@ -1,4 +1,0 @@
-include_rules = [
-  "+components/browser_ui/share",
-  "+components/saved_tab_groups/messaging",
-]

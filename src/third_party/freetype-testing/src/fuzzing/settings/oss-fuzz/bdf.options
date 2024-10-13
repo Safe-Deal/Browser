@@ -1,3 +1,0 @@
-[libfuzzer]
-max_len = 30000
-dict = bdf.dict
