@@ -1,31 +1,10 @@
 #!/usr/bin/env bash
 
-# Check if Node.js is installed
-if ! command -v node &> /dev/null; then
-    echo "Node.js is not installed. Please install Node.js and npm first."
-    exit 1
-fi
-
-# Check if Yarn is installed
-if ! command -v yarn &> /dev/null; then
-    echo "Yarn is not installed. Please install Yarn first."
-    exit 1
-fi
-
-# Install dependencies if they're not already installed
-if [ ! -d "node_modules" ]; then
-    echo "Installing dependencies..."
-    yarn install
-fi
-
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
 # Treat unset variables as an error when substituting.
 set -u
-
-# Print commands and their arguments as they are executed.
-set -x
 
 # Ensure script is executed from the tools directory
 cd "$(dirname "$0")"
@@ -57,18 +36,6 @@ warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
-# Function to display progress bar
-progress_bar() {
-    local duration=$1
-    local steps=$2
-    local sleep_time=$(bc <<< "scale=4; $duration / $steps")
-    for ((i=0; i<$steps; i++)); do
-        printf "\r[%-50s] %d%%" $(printf "=%.0s" $(seq 1 $((i*50/steps)))) $((i*100/steps))
-        sleep $sleep_time
-    done
-    printf "\r[%-50s] %d%%\n" "$(printf '=' {1..50})" 100
-}
-
 # Display welcome message
 echo -e "${MAGENTA}"
 echo "======================================"
@@ -76,19 +43,15 @@ echo "  Welcome to Safe Deal - Browser Setup"
 echo "======================================"
 echo -e "${NC}"
 
-# Checking for Homebrew, and installing if not present
-if ! command -v brew &> /dev/null; then
-    warning "Homebrew not found. Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || error "Failed to install Homebrew"
-    success "Homebrew installed successfully."
-else
-    log "Homebrew is already installed."
-fi
-
 # Install necessary dependencies
 log "Installing essential dependencies..."
-echo -e "${CYAN}This may take a few minutes. Please be patient.${NC}"
-brew install python3 git cmake ninja || error "Failed to install dependencies"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    brew install python3 git cmake ninja || error "Failed to install dependencies"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    sudo apt-get update && sudo apt-get install -y python3 git cmake ninja-build || error "Failed to install dependencies"
+else
+    error "Unsupported operating system"
+fi
 success "Dependencies installed successfully."
 
 # Clone depot_tools if not already present
@@ -100,47 +63,17 @@ else
     log "Depot Tools already cloned."
 fi
 
-# Add depot_tools to PATH if not already added
-if [[ ":$PATH:" != *":$(pwd)/../depot_tools:"* ]]; then
-    log "Adding Depot Tools to PATH..."
-    echo 'export PATH="$PATH:'"$(pwd)/../depot_tools"'"' >> ~/.zshrc
-    source ~/.zshrc
-    success "Depot Tools added to PATH."
-else
-    log "Depot Tools already in PATH."
-fi
+# Add depot_tools to PATH
+export PATH="$PATH:$(pwd)/../depot_tools"
 
 # Function to clone Chromium repository
 clone_chromium() {
     log "Cloning Chromium repository..."
-    git clone https://github.com/chromium/chromium.git ../chromium/src || error "Failed to clone Chromium repository"
-    cd ../chromium/src
-
-    # Configure git to ignore problematic submodules
-    git config submodule.chrome/test/data/perf/private.update none
-    git config submodule.third_party/webgl/src.update none
-    git config submodule.build/fuchsia/internal.update none
-    git config submodule.third_party/fuchsia-sdk.update none
-
-    # Create a .gclient file to exclude problematic dependencies
-    cat > ../.gclient <<EOL
-solutions = [
-  {
-    "url": "https://github.com/chromium/chromium.git",
-    "managed": False,
-    "name": "src",
-    "deps_file": "DEPS",
-    "custom_deps": {
-      "build/fuchsia/internal": None,
-      "third_party/fuchsia-sdk": None,
-    },
-  },
-]
-EOL
-
-    # Initialize and update submodules, ignoring errors
-    git submodule update --init --recursive || true
-
+    mkdir -p ../chromium
+    cd ../chromium
+    fetch --nohooks --no-history chromium || error "Failed to fetch Chromium"
+    cd src
+    git checkout main
     cd - > /dev/null
     success "Chromium repository cloned successfully."
 }
@@ -153,11 +86,8 @@ if [ -d "../chromium/src" ]; then
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log "Updating Chromium source code..."
         cd ../chromium/src
+        git checkout main
         git pull origin main || error "Failed to update Chromium source code"
-        
-        # Skip updating submodules entirely
-        log "Skipping submodule updates to avoid authentication issues."
-        
         cd - > /dev/null
         success "Chromium source code updated successfully."
     else
@@ -169,38 +99,20 @@ fi
 
 # Sync dependencies
 log "Syncing Chromium dependencies..."
-echo -e "${CYAN}This process may take a while. Please be patient.${NC}"
-
-# Change to the chromium directory before running gclient sync
 cd ../chromium
+gclient sync --with_branch_heads --with_tags --no-history --nohooks || error "Failed to sync dependencies"
+success "Chromium dependencies synced successfully."
 
-# Create a .gclient file to exclude all submodules
-cat > .gclient <<EOL
-solutions = [
-  {
-    "url": "https://github.com/chromium/chromium.git",
-    "managed": False,
-    "name": "src",
-    "deps_file": "DEPS",
-    "custom_deps": {},
-  },
-]
-recursedeps = []
-EOL
+# Run hooks
+log "Running hooks..."
+gclient runhooks || error "Failed to run hooks"
+success "Hooks completed successfully."
 
-# Run gclient sync with options to skip all submodules
-log "Syncing Chromium dependencies..."
-gclient sync --ignore_locks --delete_unversioned_trees --reset --force --with_branch_heads --with_tags -v -R --nohooks || true
-
-# Check if gclient sync was successful
-if [ $? -eq 0 ]; then
-    success "Chromium dependencies synced successfully."
-else
-    warning "Some dependencies failed to sync. This is normal for open-source contributors."
-fi
-
-# Change back to the tools directory
-cd - > /dev/null
+# Generate build files
+log "Generating build files..."
+cd src
+gn gen out/Default --args='is_debug=false is_component_build=false use_jumbo_build=true symbol_level=0 blink_symbol_level=0 enable_nacl=false' || error "Failed to generate build files"
+success "Build files generated successfully."
 
 # Display completion message
 echo -e "${MAGENTA}"
@@ -210,8 +122,4 @@ echo "  You are ready to build Safe Deal - Browser!"
 echo "======================================"
 echo -e "${NC}"
 
-# Simulating a loading process
-echo "Finalizing setup..."
-progress_bar 3 50
-
-success "Setup process completed. Happy coding!"
+success "Setup process completed. To build the browser, run: ninja -C out/Default chrome"
