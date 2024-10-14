@@ -100,7 +100,49 @@ fi
 # Sync dependencies
 log "Syncing Chromium dependencies..."
 cd ../chromium
+
+# Check for local changes in problematic directories
+PROBLEMATIC_DIRS=(
+    "src/chrome/test/data/xr/webvr_info"
+    # Add other problematic directories here if needed
+)
+
+for dir in "${PROBLEMATIC_DIRS[@]}"; do
+    if [ -d "$dir" ]; then
+        cd "$dir"
+        if [ -n "$(git status --porcelain)" ]; then
+            log "Local changes detected in $dir. Stashing changes..."
+            git stash push -m "Stashed by setup script before sync"
+        fi
+        cd - > /dev/null
+    fi
+done
+
+# Sync dependencies
+log "Running gclient sync..."
 gclient sync --with_branch_heads --with_tags --no-history --nohooks || error "Failed to sync dependencies"
+
+# Try to apply stashed changes if any
+for dir in "${PROBLEMATIC_DIRS[@]}"; do
+    if [ -d "$dir" ]; then
+        cd "$dir"
+        if git stash list | grep -q "Stashed by setup script before sync"; then
+            log "Attempting to reapply local changes in $dir..."
+            if git stash apply; then
+                success "Local changes in $dir reapplied successfully."
+                git stash drop
+            else
+                warning "Conflicts occurred while reapplying local changes in $dir."
+                warning "The changes are kept in the stash. Please resolve conflicts manually."
+                warning "Use 'git stash show -p stash@{0}' to view the changes."
+                warning "After resolving, apply changes with 'git stash pop' and commit them."
+                git status
+            fi
+        fi
+        cd - > /dev/null
+    fi
+done
+
 success "Chromium dependencies synced successfully."
 
 # Run hooks
